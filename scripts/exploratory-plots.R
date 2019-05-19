@@ -1,40 +1,21 @@
-library(tidyverse)
-library(glue)
-library(rio)
-library(janitor)
-library(english)
+source(here::here("scripts", "_packages.R"))
 
 theme_set(theme_minimal(10))
-source(here::here("scripts", "clean-names.R"))
-source(here::here("scripts", "data-prep.R"))
 
-measure_labels <- c("interpersonal" = "Approaches to Learning: Interpersonal Skills",
-                    "selfreg" = "Approaches to Learning: Self Regulation",
-                    "atl" = "Approaches to Learning: Total", 
-                    "ln" = "Letter Names", 
-                    "lowerln" = "Letter Names: Lower case",
-                    "upperln" = "Letter Names: Upper Case",
-                    "ls" = "Letter Sounds",
-                    "math" = "Mathematics",
-                    "spanish" = "Spanish")
-
-lane <- filter(d, county == "Lane") %>% 
-  mutate(year = parse_number(year) + 2001,
-         measure_label = factor(measure, 
-                                levels = names(measure_labels),
-                                labels = measure_labels))
+d <- read_feather(here::here("data", "ela_14-19.feather"))
+lane <- filter(d, county == "Lane")
 
 means <- lane %>% 
-  group_by(stu_type, stu_group, measure_label, year) %>% 
+  group_by(stu_type, stu_group, measure, year) %>% 
   summarize(mean = mean(score, na.rm = TRUE),
             se = sundry::se(score)) %>% 
   ungroup()
-
+  
 #fs::dir_create((here::here("plots", "county-level")))
 
 # Overall trends by measure
 county_level <- means %>% 
-  filter(stu_type == "Total Population") %>% 
+  filter(stu_group == "Total Population") %>% 
 ggplot(aes(year, mean)) +
   geom_line(color = "cornflowerblue") +
   geom_ribbon(aes(ymin = mean + qnorm(0.975)*se,
@@ -42,7 +23,8 @@ ggplot(aes(year, mean)) +
               fill = "cornflowerblue",
               alpha = 0.3) +
   geom_point(color = "gray40") +
-  facet_wrap(~measure_label, scales = "free_y") +
+  facet_wrap(~measure, scales = "free_y") +
+  expand_limits(y = 0) +
   labs(x = "Year",
        y = "Average Score",
        title = "Trends by measure over time",
@@ -64,7 +46,8 @@ ggplot(aes(year, mean)) +
                   fill = stu_group),
               alpha = 0.3) +
   geom_point(aes(color = stu_group)) +
-  facet_wrap(~measure_label, scales = "free_y") +
+  facet_wrap(~measure, scales = "free_y") +
+  expand_limits(y = 0) +
   scale_fill_brewer(palette = "Set2") +
   scale_color_brewer(palette = "Set2")
 
@@ -80,7 +63,8 @@ ggplot(aes(year, mean)) +
                   fill = stu_group),
               alpha = 0.3) +
   geom_point(aes(color = stu_group)) +
-  facet_wrap(~measure_label, scales = "free_y") +
+  facet_wrap(~measure, scales = "free_y") +
+  expand_limits(y = 0) +
   scale_fill_brewer("Student Group", palette = "Set2") +
   scale_color_brewer("Student Group", palette = "Set2") +
   labs(x = "Year",
@@ -109,7 +93,8 @@ ggplot(aes(year, mean)) +
                   fill = stu_group),
               alpha = 0.3) +
   geom_point(aes(color = stu_group)) +
-  facet_wrap(~measure_label, scales = "free_y") +
+  facet_wrap(~measure, scales = "free_y") +
+  expand_limits(y = 0) +
   scale_fill_brewer("Coded gender", palette = "Accent") +
   scale_color_brewer("Coded gender", palette = "Accent") +
   labs(x = "Year",
@@ -129,7 +114,7 @@ ggsave(here::here("plots", "county-level", "gender.png"),
 
 ###### By District
 dist_means <- lane %>% 
-  group_by(dist_name, stu_type, stu_group, measure_label, year) %>% 
+  group_by(dist_name, stu_type, stu_group, measure, year) %>% 
   summarize(mean = mean(score, na.rm = TRUE),
             se = sundry::se(score)) %>% 
   ungroup()
@@ -148,7 +133,7 @@ dist_plots <- map(dists, ~
       geom_line(data = filter(tot_pop, dist_name == .x),
                 aes(color = "#E34755"),
                 lwd = 1.2) +
-      facet_wrap(~measure_label, scales = "free_y") +
+      facet_wrap(~measure, scales = "free_y") +
       labs(x = "Year",
            y = "Average Score",
            title = "Trends by district and measure over time",

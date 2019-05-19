@@ -1,0 +1,7 @@
+# devtools::install_github("wesm/feather/R")
+library(tidyverse)
+library(glue)
+library(rio)
+library(janitor)
+library(english)
+library(feather)

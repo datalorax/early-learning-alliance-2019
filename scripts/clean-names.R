@@ -1,3 +1,5 @@
+source(here::here("scripts", "_packages.R"))
+
 nms19 <- c("county", "distid", "dist_name", "instid", "inst_name", 
            "inst_type", "stu_type", "stu_group", "selfreg_score", 
            "interpersonal_score", "atl_score", "atl_n", "math_score", "math_n",
