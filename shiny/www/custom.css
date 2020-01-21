@@ -1,0 +1,8 @@
+.red {
+  background-color: #e34755;
+}
+
+table.dataTable tr.selected td.red {
+  background-color: #e34755 !important;
+  color: #ffffff !important;
+}
